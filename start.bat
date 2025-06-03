@@ -1,0 +1,6 @@
+@echo off
+echo Installing dependencies...
+npm install --legacy-peer-deps
+echo.
+echo Starting server...
+node index.js

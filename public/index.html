@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sandrive - Personal File Storage</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            background: linear-gradient(to bottom, 
+                #87CEEB 0%, /* Sky blue at top */
+                #E6C9A8 30%, /* Sand color in middle */
+                #D2B48C 70%, /* Darker sand at bottom */
+                #8B4513 100% /* Brown at very bottom */
+            ) !important;
+            background-attachment: fixed !important;
+            background-size: cover !important;
+            position: relative;
+            min-height: 100vh;
+        }
+        
+        /* Oasis elements */
+        .oasis-element {
+            position: fixed;
+            z-index: -1;
+        }
+        
+        /* Palm tree left */
+        .palm-tree-left {
+            bottom: 0;
+            left: 10%;
+            width: 20px;
+            height: 150px;
+            background-color: #8B4513; /* Brown trunk */
+        }
+        
+        /* Palm tree leaves left */
+        .palm-leaves-left {
+            bottom: 150px;
+            left: calc(10% - 30px);
+            width: 80px;
+            height: 80px;
+            background-color: #2E8B57; /* Green leaves */
+            border-radius: 50% 50% 0 50%;
+            transform: rotate(45deg);
+            box-shadow: 
+                -20px -20px 0 #2E8B57,
+                20px -20px 0 #2E8B57,
+                -20px 20px 0 #2E8B57,
+                20px 20px 0 #2E8B57;
+        }
+        
+        /* Palm tree right */
+        .palm-tree-right {
+            bottom: 0;
+            right: 10%;
+            width: 20px;
+            height: 120px;
+            background-color: #8B4513; /* Brown trunk */
+        }
+        
+        /* Palm tree leaves right */
+        .palm-leaves-right {
+            bottom: 120px;
+            right: calc(10% - 30px);
+            width: 80px;
+            height: 80px;
+            background-color: #2E8B57; /* Green leaves */
+            border-radius: 50% 50% 0 50%;
+            transform: rotate(45deg);
+            box-shadow: 
+                -20px -20px 0 #2E8B57,
+                20px -20px 0 #2E8B57,
+                -20px 20px 0 #2E8B57,
+                20px 20px 0 #2E8B57;
+        }
+        
+        /* Oasis water */
+        .oasis-water {
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 80px;
+            background-color: #0d9488; /* Turquoise water */
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(13, 148, 136, 0.8);
+        }
+        
+        /* Sun */
+        .sun {
+            top: 50px;
+            right: 50px;
+            width: 80px;
+            height: 80px;
+            background-color: #e67e22; /* Orange sun */
+            border-radius: 50%;
+            box-shadow: 0 0 50px rgba(230, 126, 34, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <!-- Oasis elements -->
+    <div class="oasis-element palm-tree-left"></div>
+    <div class="oasis-element palm-leaves-left"></div>
+    <div class="oasis-element palm-tree-right"></div>
+    <div class="oasis-element palm-leaves-right"></div>
+    <div class="oasis-element oasis-water"></div>
+    <div class="oasis-element sun"></div>
+    
+    <div class="container">
+        <header>
+            <div class="language-selector">
+                <button id="lang-ko" class="lang-btn">한국어</button>
+                <button id="lang-en" class="lang-btn active">English</button>
+            </div>
+            <h1><i class="fas fa-umbrella-beach"></i> Sandrive</h1>
+            <p id="tagline">Your personal oasis for file storage</p>
+            
+            <!-- User profile section (shown when logged in) -->
+            <div id="user-profile" class="hidden">
+                <div class="user-info">
+                    <i class="fas fa-user-circle"></i>
+                    <span id="username"></span>
+                </div>
+                <button id="logout-btn" class="btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span id="logout-text">Logout</span>
+                </button>
+            </div>
+        </header>
+
+        <main>
+            <!-- Auth section (shown when not logged in) -->
+            <section id="auth-section" class="auth-section">
+                <div class="auth-container">
+                    <div class="auth-tabs">
+                        <button id="login-tab" class="auth-tab active" data-tab="login">
+                            <span id="login-tab-text">Login</span>
+                        </button>
+                        <button id="register-tab" class="auth-tab" data-tab="register">
+                            <span id="register-tab-text">Register</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Login form -->
+                    <div id="login-form" class="auth-form active">
+                        <div class="form-group">
+                            <label for="login-username" id="login-username-label">Username or Email</label>
+                            <input type="text" id="login-username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="login-password" id="login-password-label">Password</label>
+                            <input type="password" id="login-password" required>
+                        </div>
+                        <button id="login-btn" class="btn btn-primary">
+                            <span id="login-btn-text">Login</span>
+                        </button>
+                        <div id="login-error" class="auth-error"></div>
+                    </div>
+                    
+                    <!-- Register form -->
+                    <div id="register-form" class="auth-form">
+                        <div class="form-group">
+                            <label for="register-username" id="register-username-label">Username</label>
+                            <input type="text" id="register-username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="register-email" id="register-email-label">Email</label>
+                            <input type="email" id="register-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="register-password" id="register-password-label">Password</label>
+                            <input type="password" id="register-password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="register-confirm-password" id="register-confirm-password-label">Confirm Password</label>
+                            <input type="password" id="register-confirm-password" required>
+                        </div>
+                        <button id="register-btn" class="btn btn-primary">
+                            <span id="register-btn-text">Register</span>
+                        </button>
+                        <div id="register-error" class="auth-error"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- App section (shown when logged in) -->
+            <section id="app-section" class="hidden">
+                <section class="upload-section">
+                    <div class="upload-container" id="drop-area">
+                        <div class="upload-content">
+                            <i class="fas fa-palm-tree"></i>
+                            <h3 id="upload-title">Upload Files</h3>
+                            <p id="upload-desc">Drag & drop files here or click to browse</p>
+                            <input type="file" id="file-input" multiple>
+                            <button id="browse-btn">Browse Files</button>
+                            <!-- Upload button will be added dynamically by JavaScript -->
+                        </div>
+                    </div>
+                    <div class="upload-progress" id="upload-progress">
+                        <div class="progress-bar">
+                            <div class="progress" id="progress-bar"></div>
+                        </div>
+                        <p id="progress-text">0%</p>
+                    </div>
+                    <div id="upload-status"></div>
+                </section>
+
+                <section class="files-section">
+                    <div class="files-header">
+                        <h2 id="files-title">My Files</h2>
+                        <div class="search-container">
+                            <input type="text" id="search-input" placeholder="Search files..." data-ko-placeholder="파일 검색...">
+                            <i class="fas fa-search"></i>
+                        </div>
+                    </div>
+                    <div class="files-list" id="files-list">
+                        <div class="loading-spinner" id="loading-spinner">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p id="loading-text">Loading files...</p>
+                        </div>
+                        <div class="no-files" id="no-files">
+                            <i class="fas fa-folder-open"></i>
+                            <p id="no-files-text">No files uploaded yet</p>
+                        </div>
+                        <table id="files-table">
+                            <thead>
+                                <tr>
+                                    <th id="th-name">Name</th>
+                                    <th id="th-size">Size</th>
+                                    <th id="th-uploaded">Uploaded</th>
+                                    <th id="th-actions">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="files-table-body">
+                                <!-- Files will be listed here dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </section>
+        </main>
+
+        <footer>
+            <p id="footer-text">&copy; 2025 Sandrive - Personal File Storage</p>
+        </footer>
+    </div>
+
+    <!-- Templates for dynamic content -->
+    <template id="file-row-template">
+        <tr class="file-row">
+            <td class="file-name">
+                <i class="file-icon"></i>
+                <span class="name-text"></span>
+            </td>
+            <td class="file-size"></td>
+            <td class="file-date"></td>
+            <td class="file-actions">
+                <button class="download-btn" title="Download">
+                    <i class="fas fa-download"></i>
+                </button>
+                <button class="delete-btn" title="Delete">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    </template>
+
+    <script src="script.js"></script>
+</body>
+</html>

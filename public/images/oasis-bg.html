@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oasis Background</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        .oasis-bg {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, 
+                #87CEEB 0%, /* Sky blue at top */
+                #E6C9A8 30%, /* Sand color in middle */
+                #D2B48C 70%, /* Darker sand at bottom */
+                #8B4513 100% /* Brown at very bottom */
+            );
+            position: relative;
+        }
+        /* Add palm trees */
+        .palm {
+            position: absolute;
+            bottom: 20%;
+            width: 40px;
+            height: 120px;
+        }
+        .palm:before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 15px;
+            width: 10px;
+            height: 80px;
+            background: #8B4513;
+            border-radius: 5px;
+        }
+        .palm:after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 40px;
+            height: 40px;
+            background: #2E8B57;
+            border-radius: 50% 50% 0 50%;
+            transform: rotate(45deg);
+            box-shadow: 
+                -10px -10px 0 #2E8B57,
+                10px -10px 0 #2E8B57,
+                -10px 10px 0 #2E8B57,
+                10px 10px 0 #2E8B57;
+        }
+        .palm1 {
+            left: 20%;
+        }
+        .palm2 {
+            left: 60%;
+            height: 150px;
+        }
+        .palm2:before {
+            height: 100px;
+        }
+        /* Add water oasis */
+        .water {
+            position: absolute;
+            bottom: 20%;
+            left: 40%;
+            width: 20%;
+            height: 10%;
+            background: #0d9488;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(13, 148, 136, 0.5);
+        }
+        /* Add sun */
+        .sun {
+            position: absolute;
+            top: 10%;
+            right: 10%;
+            width: 60px;
+            height: 60px;
+            background: #e67e22;
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(230, 126, 34, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <div class="oasis-bg">
+        <div class="sun"></div>
+        <div class="water"></div>
+        <div class="palm palm1"></div>
+        <div class="palm palm2"></div>
+    </div>
+</body>
+</html>
