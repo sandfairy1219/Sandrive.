@@ -176,6 +176,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // Current language
     let currentLang = localStorage.getItem('sandrive-lang') || 'en';
     
+    // API URL (상대 경로 사용)
+    const apiUrl = '/api';
+
+    // fetch 요청 공통 함수 정의 (여기에 추가)
+    async function fetchAPI(url, options = {}) {
+        try {
+            const response = await fetch(url, options);
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error(`${translations[currentLang].loadFailed} (Not JSON: ${contentType})`);
+            }
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || translations[currentLang].loadFailed);
+            }
+            return data;
+        } catch (error) {
+            console.error('API 요청 오류:', error);
+            showStatus(`API 오류: ${error.message}`, 'error');
+            throw error;
+        }
+    }
+    
     // Initialize the app
     init();
     
