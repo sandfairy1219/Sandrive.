@@ -117,7 +117,8 @@ document.addEventListener('DOMContentLoaded', () => {
             registerFailed: 'Registration failed. Please try again.',
             passwordMismatch: 'Passwords do not match.',
             welcomeBack: 'Welcome back',
-            sessionExpired: 'Your session has expired. Please login again.'
+            sessionExpired: 'Your session has expired. Please login again.',
+            downloadFailed: 'Failed to download file. Please try again.'
         },
         ko: {
             tagline: '파일 저장을 위한 개인 오아시스',
@@ -167,7 +168,8 @@ document.addEventListener('DOMContentLoaded', () => {
             registerFailed: '회원가입 실패. 다시 시도해주세요.',
             passwordMismatch: '비밀번호가 일치하지 않습니다.',
             welcomeBack: '다시 오신 것을 환영합니다',
-            sessionExpired: '세션이 만료되었습니다. 다시 로그인해주세요.'
+            sessionExpired: '세션이 만료되었습니다. 다시 로그인해주세요.',
+            downloadFailed: '파일 다운로드에 실패했습니다. 다시 시도해주세요.'
         }
     };
     
@@ -223,17 +225,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (token) {
             // Verify token validity
-            fetch('/api/auth/me', {
+            fetchAPI(`${apiUrl}/auth/me`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
-                }
-            })
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    // Token is invalid or expired
-                    throw new Error('Invalid token');
                 }
             })
             .then(user => {
@@ -307,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Validate form
         if (!loginUsername.value || !loginPassword.value) {
-            showAuthError(loginError, 'Please fill in all fields.');
+            showAuthError(loginError, translations[currentLang].loginFailed);
             return;
         }
         
@@ -315,22 +309,14 @@ document.addEventListener('DOMContentLoaded', () => {
         loginBtn.disabled = true;
         
         try {
-            const response = await fetch('/api/auth/login', {
+            const data = await fetchAPI(`${apiUrl}/auth/login`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     username: loginUsername.value,
                     password: loginPassword.value
                 })
             });
-            
-            const data = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(data.message || translations[currentLang].loginFailed);
-            }
             
             // Store token
             localStorage.setItem('sandrive-token', data.token);
@@ -342,7 +328,6 @@ document.addEventListener('DOMContentLoaded', () => {
             showAuthenticatedUI(data.user);
             
         } catch (error) {
-            console.error('Login error:', error);
             showAuthError(loginError, error.message || translations[currentLang].loginFailed);
         } finally {
             // Re-enable button
@@ -355,7 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Validate form
         if (!registerUsername.value || !registerEmail.value || !registerPassword.value || !registerConfirmPassword.value) {
-            showAuthError(registerError, 'Please fill in all fields.');
+            showAuthError(registerError, translations[currentLang].registerFailed);
             return;
         }
         
@@ -369,23 +354,15 @@ document.addEventListener('DOMContentLoaded', () => {
         registerBtn.disabled = true;
         
         try {
-            const response = await fetch('/api/auth/register', {
+            const data = await fetchAPI(`${apiUrl}/auth/register`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     username: registerUsername.value,
                     email: registerEmail.value,
                     password: registerPassword.value
                 })
             });
-            
-            const data = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(data.message || translations[currentLang].registerFailed);
-            }
             
             // Show success message
             showAuthError(registerError, translations[currentLang].registerSuccess, true);
@@ -397,7 +374,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 2000);
             
         } catch (error) {
-            console.error('Registration error:', error);
             showAuthError(registerError, error.message || translations[currentLang].registerFailed);
         } finally {
             // Re-enable button
@@ -633,42 +609,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const token = localStorage.getItem('sandrive-token');
         
         try {
-            const response = await fetch('/api/files/upload', {
+            // fetchAPI는 JSON 응답만 처리하므로, 파일 업로드는 별도 처리
+            const response = await fetch(`${apiUrl}/files/upload`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`
                 },
-                body: formData,
-                // Track upload progress
-                xhr: () => {
-                    const xhr = new XMLHttpRequest();
-                    xhr.upload.addEventListener('progress', (e) => {
-                        if (e.lengthComputable) {
-                            const percentComplete = Math.round((e.loaded / e.total) * 100);
-                            updateProgress(percentComplete);
-                        }
-                    });
-                    return xhr;
-                }
+                body: formData
             });
-            
-            if (!response.ok) {
-                throw new Error('Upload failed');
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error(`${translations[currentLang].uploadFailed} (Not JSON: ${contentType})`);
             }
-            
             const result = await response.json();
-            
-            // Show success message
+            if (!response.ok) {
+                throw new Error(result.message || translations[currentLang].uploadFailed);
+            }
             showStatus(translations[currentLang].fileUploaded, 'success');
-            
-            // Reload file list
             loadFiles();
-            
-            // Remove the upload button if all files are uploaded
             if (selectedFiles.length === 0) {
                 removeUploadButton();
             }
-            
         } catch (error) {
             console.error('Error uploading file:', error);
             showStatus(translations[currentLang].uploadFailed, 'error');
@@ -709,22 +670,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const token = localStorage.getItem('sandrive-token');
         
         try {
-            const response = await fetch('/api/files', {
+            const files = await fetchAPI(`${apiUrl}/files`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
-            
-            if (!response.ok) {
-                throw new Error('Failed to fetch files');
-            }
-            
-            const files = await response.json();
-            
-            // Hide loading spinner
             loadingSpinner.style.display = 'none';
-            
-            // Display files or show empty state
             if (files.length === 0) {
                 noFiles.style.display = 'flex';
                 filesTable.style.display = 'none';
@@ -733,9 +684,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 filesTable.style.display = 'table';
                 renderFiles(files);
             }
-            
         } catch (error) {
-            console.error('Error loading files:', error);
             loadingSpinner.style.display = 'none';
             showStatus(translations[currentLang].loadFailed, 'error');
         }
@@ -885,20 +834,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function downloadFile(filename) {
-        // Get auth token
         const token = localStorage.getItem('sandrive-token');
-        
-        // Create a temporary link
         const link = document.createElement('a');
-        link.href = `/api/files/download/${filename}`;
+        link.href = `${apiUrl}/files/download/${filename}`;
         link.setAttribute('download', '');
-        
-        // Add auth token to the request
         const xhr = new XMLHttpRequest();
         xhr.open('GET', link.href);
         xhr.setRequestHeader('Authorization', `Bearer ${token}`);
         xhr.responseType = 'blob';
-        
         xhr.onload = function() {
             if (xhr.status === 200) {
                 const blob = new Blob([xhr.response], { type: xhr.getResponseHeader('Content-Type') });
@@ -910,7 +853,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 showStatus(translations[currentLang].downloadFailed, 'error');
             }
         };
-        
+        xhr.onerror = function() {
+            showStatus(translations[currentLang].downloadFailed, 'error');
+        };
         xhr.send();
     }
 
@@ -918,30 +863,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!confirm(translations[currentLang].deleteConfirm)) {
             return;
         }
-        
-        // Get auth token
         const token = localStorage.getItem('sandrive-token');
-        
         try {
-            const response = await fetch(`/api/files/${filename}`, {
+            await fetchAPI(`${apiUrl}/files/${filename}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
-            
-            if (!response.ok) {
-                throw new Error('Failed to delete file');
-            }
-            
-            // Show success message
             showStatus(translations[currentLang].deleteSuccess, 'success');
-            
-            // Reload file list
             loadFiles();
-            
         } catch (error) {
-            console.error('Error deleting file:', error);
             showStatus(translations[currentLang].deleteFailed, 'error');
         }
     }
