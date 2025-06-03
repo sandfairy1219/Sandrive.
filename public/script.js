@@ -185,17 +185,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(url, options);
             const contentType = response.headers.get('content-type');
             if (!contentType || !contentType.includes('application/json')) {
-                throw new Error(`${translations[currentLang].loadFailed} (Not JSON: ${contentType})`);
+                // 서버가 JSON이 아닌 HTML 등 반환 시
+                throw new Error(translations[currentLang].loadFailed);
             }
             const data = await response.json();
             if (!response.ok) {
-                throw new Error(data.message || translations[currentLang].loadFailed);
+                // 서버에서 에러 메시지가 오더라도 번역 메시지 우선
+                throw new Error(translations[currentLang].loadFailed);
             }
             return data;
         } catch (error) {
-            console.error('API 요청 오류:', error);
-            showStatus(`API 오류: ${error.message}`, 'error');
-            throw error;
+            // 항상 번역 메시지로만 안내
+            showStatus(translations[currentLang].loadFailed, 'error');
+            throw new Error(translations[currentLang].loadFailed);
         }
     }
     
@@ -321,16 +323,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     async function handleLogin(e) {
         e.preventDefault();
-        
-        // Validate form
         if (!loginUsername.value || !loginPassword.value) {
             showAuthError(loginError, translations[currentLang].loginFailed);
             return;
         }
-        
-        // Disable button during login
         loginBtn.disabled = true;
-        
         try {
             const data = await fetchAPI(`${apiUrl}/auth/login`, {
                 method: 'POST',
@@ -340,42 +337,27 @@ document.addEventListener('DOMContentLoaded', () => {
                     password: loginPassword.value
                 })
             });
-            
-            // Store token
             localStorage.setItem('sandrive-token', data.token);
-            
-            // Show success message
             showStatus(translations[currentLang].loginSuccess, 'success');
-            
-            // Update UI
             showAuthenticatedUI(data.user);
-            
         } catch (error) {
-            showAuthError(loginError, error.message || translations[currentLang].loginFailed);
+            showAuthError(loginError, translations[currentLang].loginFailed);
         } finally {
-            // Re-enable button
             loginBtn.disabled = false;
         }
     }
     
     async function handleRegister(e) {
         e.preventDefault();
-        
-        // Validate form
         if (!registerUsername.value || !registerEmail.value || !registerPassword.value || !registerConfirmPassword.value) {
             showAuthError(registerError, translations[currentLang].registerFailed);
             return;
         }
-        
-        // Check if passwords match
         if (registerPassword.value !== registerConfirmPassword.value) {
             showAuthError(registerError, translations[currentLang].passwordMismatch);
             return;
         }
-        
-        // Disable button during registration
         registerBtn.disabled = true;
-        
         try {
             const data = await fetchAPI(`${apiUrl}/auth/register`, {
                 method: 'POST',
@@ -386,20 +368,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     password: registerPassword.value
                 })
             });
-            
-            // Show success message
             showAuthError(registerError, translations[currentLang].registerSuccess, true);
-            
-            // Switch to login tab after a delay
             setTimeout(() => {
                 switchAuthTab('login');
                 loginUsername.value = registerUsername.value;
             }, 2000);
-            
         } catch (error) {
-            showAuthError(registerError, error.message || translations[currentLang].registerFailed);
+            showAuthError(registerError, translations[currentLang].registerFailed);
         } finally {
-            // Re-enable button
             registerBtn.disabled = false;
         }
     }
