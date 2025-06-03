@@ -17,7 +17,7 @@
 
 ## 데모
 
-> 배포 주소: (직접 입력)
+> 배포 주소: https://sandrive.onrender.com/
 
 ## 기술 스택
 
